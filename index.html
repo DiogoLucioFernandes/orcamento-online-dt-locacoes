@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DT Locações | Aluguel de Mesas</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=SUA_CHAVE_AQUI&libraries=places"></script>
+    
+    <style>
+        :root { --bg-dark: #121212; --bg-card: #ffffff; --primary-gold: #FDD835; --primary-dark-gold: #c6a700; --text-light: #f4f4f4; --text-dark: #333333; --accent-green: #25D366; --header-height: 70px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Open Sans', sans-serif; background-color: var(--bg-dark); color: var(--text-light); line-height: 1.5;}
+        h1, h2, h3 { font-family: 'Montserrat', sans-serif; text-transform: uppercase; font-weight: 800; }
+        
+        /* HEADER */
+        header { background: rgba(0,0,0,0.95); position: fixed; top: 0; width: 100%; height: var(--header-height); z-index: 1000; border-bottom: 2px solid var(--primary-gold); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; width: 100%; }
+        nav { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .logo img { height: 65px; width: auto; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { color: var(--text-light); text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+
+        /* HERO */
+        .hero { position: relative; min-height: 500px; height: 75vh; display: flex; align-items: center; justify-content: center; text-align: center; margin-top: 0; overflow: hidden; }
+        .hero-bg { position: absolute; top: 0; left: 0; width: 100%; height: 120%; object-fit: cover; z-index: -2; will-change: transform, opacity; }
+        .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(18,18,18,1)); z-index: -1; }
+        .hero-content { background: rgba(0, 0, 0, 0.6); padding: 30px; border-radius: 15px; border: 1px solid rgba(253, 216, 53, 0.3); backdrop-filter: blur(5px); margin: 0 15px; width: 100%; max-width: 600px; z-index: 1; margin-top: 60px; }
+        .hero h1 { font-size: 2rem; margin-bottom: 15px; color: white; line-height: 1.2; }
+        .hero span { color: var(--primary-gold); }
+        .btn-group { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; align-items: center; }
+        .btn-cta { background: var(--primary-gold); color: black; padding: 14px 35px; border-radius: 50px; text-decoration: none; font-weight: 800; text-transform: uppercase; font-size: 0.95rem; letter-spacing: 1px; box-shadow: 0 0 15px rgba(253, 216, 53, 0.4); width: 100%; max-width: 300px; }
+        .btn-whatsapp-hero { background: transparent; border: 2px solid var(--accent-green); color: var(--accent-green); padding: 12px 35px; border-radius: 50px; text-decoration: none; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; width: 100%; max-width: 300px; justify-content: center; transition: 0.3s; }
+        .btn-whatsapp-hero:hover { background: var(--accent-green); color: white; }
+
+        /* CATALOGO */
+        .catalog-section { padding: 20px 0 60px 0; background: #121212; position: relative; z-index: 2; }
+        .section-title { text-align: center; margin-bottom: 30px; }
+        .section-title h2 { color: var(--primary-gold); font-size: 1.6rem; margin-bottom: 5px; }
+        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .product-card { background: var(--bg-card); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; color: var(--text-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.2); height: 100%; }
+        .product-img-box { height: 140px; width: 100%; background: white; display: flex; align-items: center; justify-content: center; padding: 5px; border-bottom: 1px solid #f0f0f0; }
+        .product-img-box img { max-height: 100%; max-width: 100%; object-fit: contain; }
+        .product-info { padding: 10px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .product-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: #222; line-height: 1.3; height: auto; min-height: 40px; }
+        .product-price { font-size: 1rem; color: #222; font-weight: 800; margin-bottom: 5px; display: block; }
+        .qty-control { display: flex; align-items: center; justify-content: center; gap: 5px; background: #f4f4f4; padding: 4px; border-radius: 50px; border: 1px solid #ddd; }
+        .btn-qty { width: 35px; height: 35px; border-radius: 50%; border: none; background: var(--primary-gold); color: black; font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-qty:active { transform: scale(0.9); background: #e0bf2b; }
+        .qty-input { width: 40px; text-align: center; font-size: 1rem; font-weight: 700; border: none; background: transparent; outline: none; padding: 0; }
+
+        /* CARRINHO */
+        .floating-cart { position: fixed; bottom: 0; left: 0; width: 100%; background: #1a1a1a; color: white; padding: 10px 15px 15px 15px; box-shadow: 0 -5px 20px rgba(0,0,0,0.9); z-index: 900; border-top: 3px solid var(--primary-gold); display: none; flex-direction: column; gap: 10px; transition: transform 0.3s ease; }
+        .floating-cart.minimized { transform: translateY(calc(100% - 50px)); }
+        .cart-toggle-btn { width: 100%; text-align: center; color: var(--primary-gold); font-size: 1.2rem; cursor: pointer; margin-bottom: 5px; }
+        .cart-list-container { max-height: 120px; overflow-y: auto; border-bottom: 1px solid #333; margin-bottom: 5px; font-size: 0.85rem; color: #ddd; }
+        .cart-list-item { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .cart-list-item span:first-child { color: #fff; }
+        .cart-list-item span:last-child { color: var(--primary-gold); font-weight: 600; }
+        .discount-row span { color: var(--accent-green) !important; font-weight: bold; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 5px; cursor: pointer; }
+        .cart-total { color: var(--primary-gold); font-weight: 900; font-size: 1.3rem; }
+        .btn-clear-cart { background: none; border: none; color: #ff5555; cursor: pointer; font-size: 1.1rem; padding: 5px; transition: 0.3s; }
+        .btn-clear-cart:hover { color: red; transform: scale(1.1); }
+        .freight-box { display: flex; gap: 8px; align-items: center; background: #222; padding: 10px; border-radius: 8px; flex-wrap: wrap; }
+        .cep-input { padding: 10px; border-radius: 6px; border: 1px solid #444; background: #000; color: white; width: 100px; text-align: center; font-size: 1.1rem; flex-grow: 1; }
+        .btn-calc { background: #444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .freight-result { width: 100%; font-size: 0.9rem; color: #ddd; text-align: right; border-top: 1px solid #333; padding-top: 5px; margin-top: 5px; }
+        .btn-finalizar { background: var(--accent-green); color: white; border: none; padding: 16px; width: 100%; border-radius: 10px; font-weight: 700; text-transform: uppercase; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 15px; }
+        .modal-box { background: white; color: #333; width: 100%; max-width: 400px; padding: 25px; border-radius: 15px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 2rem; cursor: pointer; color: #999; }
+        .modal-title { font-size: 1.2rem; margin-bottom: 15px; color: black; text-align: center; font-weight: 800; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.85rem; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; outline: none; -webkit-appearance: none; background-color: #f9f9f9; }
+        .btn-confirm { background: var(--primary-gold); color: black; border: none; width: 100%; padding: 16px; font-size: 1.1rem; font-weight: 800; border-radius: 8px; cursor: pointer; margin-top: 5px; }
+        .coupon-area { display: flex; gap: 5px; margin-bottom: 15px; }
+        .btn-coupon { background: #333; color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .coupon-msg { font-size: 0.85rem; margin-top: -10px; margin-bottom: 15px; display: block; min-height: 20px; }
+        .text-success { color: green; font-weight: bold; }
+        .text-error { color: red; }
+        .color-warning-box { display: none; background: #fffbe6; padding: 10px; border-radius: 8px; border: 1px solid #ffe58f; margin-bottom: 15px; }
+        .color-selector-wrapper { display: flex; align-items: center; gap: 15px; }
+        .color-preview-img { width: 60px; height: 60px; border-radius: 8px; border: 2px solid #ddd; object-fit: cover; display: none; background-color: #eee; }
+
+        footer { background: #000; color: #888; padding: 40px 15px; border-top: 1px solid #222; font-size: 0.9rem; text-align: center; }
+        footer a { color: #888; text-decoration: none; transition: 0.3s; }
+        footer a:hover { color: var(--primary-gold); }
+        .btn-review { display: inline-block; background: #333; color: var(--primary-gold); padding: 8px 15px; border-radius: 5px; margin-top: 15px; border: 1px solid var(--primary-gold); }
+        @media (min-width: 769px) { .nav-links { display: flex; } .products-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); } .hero { height: 80vh; } .freight-box { flex-wrap: nowrap; } .freight-result { border-top: none; padding-top: 0; margin-top: 0; width: auto; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">
+                    <img src="Logo.webp" alt="DT Locações">
+                </a>
+                <div class="nav-links">
+                    <a href="#catalogo">Catálogo</a>
+                    <a href="#contato">Contato</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <img src="https://images.unsplash.com/photo-1527529482837-4698179dc6ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" class="hero-bg" id="hero-img" alt="Festa">
+        <div class="hero-content">
+            <h1>Monte sua Festa <br><span>Agora</span></h1>
+            <p style="color: #eee; font-size: 0.9rem; margin-top: 10px;">
+                Faça seu orçamento completo online: escolha os itens, calcule o frete e reserve sua data sem burocracia. Se tiver dúvidas ou preferir atendimento humano, estamos disponíveis no WhatsApp.
+            </p>
+            <div class="btn-group">
+                <a href="#catalogo" class="btn-cta">VER CATÁLOGO</a>
+                <a href="https://wa.me/5562991185058" target="_blank" class="btn-whatsapp-hero">
+                    <i class="fab fa-whatsapp"></i> Falar no WhatsApp
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="catalogo" class="catalog-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Selecione os Itens</h2>
+                <div style="width: 40px; height: 3px; background: var(--primary-gold); margin: 8px auto;"></div>
+            </div>
+            <div class="products-grid" id="products-container">
+            </div>
+        </div>
+    </section>
+
+    <footer id="contato">
+        <div class="container">
+            <p style="color: white; font-weight: bold; font-size: 1rem; margin-bottom: 10px;">DT Locações</p>
+            <p>Av. Vereda dos Buritis, Goiânia - GO</p>
+            <p style="margin: 15px 0;">
+                <a href="tel:5562991185058" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="fab fa-whatsapp" style="color: var(--accent-green); font-size: 1.2rem;"></i> (62) 99118-5058
+                </a>
+            </p>
+            <p style="margin-bottom: 20px;">
+                <a href="https://instagram.com/dt.locacoes" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="fab fa-instagram" style="color: #E1306C; font-size: 1.2rem;"></i> @dt.locacoes
+                </a>
+            </p>
+            <a href="https://g.page/r/CU5vBx3Z3cwHEAI/review" target="_blank" class="btn-review">
+                <i class="fas fa-star"></i> Avalie-nos no Google
+            </a>
+            <br><br>
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3821.1400617335503!2d-49.3449573!3d-16.719861899999994!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8ce004e713c8d737%3A0x7ccddd91d076f4e!2sDT%20Loca%C3%A7%C3%B5es%20de%20mesas%20e%20cadeiras!5e0!3m2!1spt-PT!2sbr!4v1770081028756!5m2!1spt-PT!2sbr" width="300" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+    </footer>
+
+    <div class="floating-cart" id="cart-bar">
+        <div class="cart-toggle-btn" onclick="toggleCart()">
+            <i class="fas fa-chevron-down" id="toggle-icon"></i>
+        </div>
+
+        <div class="cart-list-container" id="cart-list-details">
+        </div>
+
+        <div class="cart-header">
+            <div style="font-size: 0.9rem; color: #ccc;">Total Estimado:</div>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div class="cart-total" id="final-total">R$ 0,00</div>
+                <button class="btn-clear-cart" onclick="clearCart()" title="Limpar Tudo">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="freight-box">
+            <i class="fas fa-truck" style="color: var(--primary-gold);"></i>
+            <input type="tel" id="cep-input" class="cep-input" placeholder="CEP" maxlength="9" autocomplete="off">
+            <button class="btn-calc" onclick="calcularFreteAPI()">OK</button>
+            <div id="freight-msg" class="freight-result">Digite o CEP acima ⬆</div>
+        </div>
+        
+        <button class="btn-finalizar" onclick="openModal()">
+            Concluir Pedido <i class="fas fa-check"></i>
+        </button>
+    </div>
+
+    <div class="modal-overlay" id="checkout-modal">
+        <div class="modal-box">
+            <span class="close-modal" onclick="closeModal()">×</span>
+            <div class="modal-title">Detalhes do Evento</div>
+            
+            <div class="form-group">
+                <label><i class="far fa-calendar-alt"></i> Data do Evento *</label>
+                <input type="date" id="event-date" autocomplete="off">
+            </div>
+
+            <div class="form-group color-warning-box" id="color-group-sq">
+                <label><i class="fas fa-square"></i> Cor dos Forros <strong>QUADRADOS</strong> *</label>
+                <div class="color-selector-wrapper">
+                    <select id="color-sq" onchange="updateCoverPreview('sq')">
+                        <option value="">Selecione...</option>
+                        <option value="Lilás">Lilás</option>
+                        <option value="Preto">Preto</option>
+                        <option value="Branco">Branco</option>
+                        <option value="Rosa Bebê">Rosa Bebê</option>
+                        <option value="Vermelho">Vermelho</option>
+                        <option value="Azul Bebê">Azul Bebê</option>
+                        <option value="Azul Marinho">Azul Marinho</option>
+                        <option value="Verde">Verde</option>
+                        <option value="Amarelo Xadrez">Amarelo Xadrez</option>
+                        <option value="Verde Xadrez">Verde Xadrez</option>
+                        <option value="Preto Xadrez">Preto Xadrez</option>
+                        <option value="Azul Xadrez">Azul Xadrez</option>
+                        <option value="Vermelho Xadrez">Vermelho Xadrez</option>
+                    </select>
+                    <img id="preview-img-sq" class="color-preview-img" src="" alt="Cor">
+                </div>
+            </div>
+
+            <div class="form-group color-warning-box" id="color-group-rd">
+                <label><i class="fas fa-circle"></i> Cor dos Forros <strong>REDONDOS</strong> *</label>
+                <div class="color-selector-wrapper">
+                    <select id="color-rd" onchange="updateCoverPreview('rd')">
+                        <option value="">Selecione...</option>
+                        <option value="Rosa Bebê">Rosa Bebê</option>
+                        <option value="Outra">Outra</option>
+                    </select>
+                    <img id="preview-img-rd" class="color-preview-img" src="" alt="Cor">
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+
+            <div class="form-group">
+                <label><i class="fas fa-tag"></i> Cupom de Desconto</label>
+                <div class="coupon-area">
+                    <input type="text" id="coupon-code" placeholder="CÓDIGO" autocomplete="off" style="text-transform: uppercase;">
+                    <button class="btn-coupon" onclick="applyCoupon()">APLICAR</button>
+                </div>
+                <span id="coupon-msg" class="coupon-msg"></span>
+            </div>
+
+            <div class="form-group">
+                <label>Seu Nome *</label>
+                <input type="text" id="client-name" placeholder="Nome Completo" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Endereço de Entrega *</label>
+                <input type="text" id="client-address" placeholder="Rua, Número, Bairro" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Pagamento *</label>
+                <select id="payment-method">
+                    <option value="Pix">Pix</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                </select>
+            </div>
+
+            <button class="btn-confirm" onclick="sendToWhatsApp()">ENVIAR PEDIDO</button>
+        </div>
+    </div>
+
+    <script>
+        const COUPONS = {
+            "CUPOM10": { percent: 0.10, active: true, expire: "2030-12-31" },
+            "CUPOM5": { percent: 0.05, active: true, expire: "2030-12-31" }
+        };
+
+        const products = [
+            { id: 1, name: "Jogo Mesa Quadrada + 4 Cadeiras", price: 18.00, image: "Mesa quadrada + 4 cadeiras.jpg", type: 1 },
+            { id: 4, name: "Mesa Quadrada Avulsa", price: 10.00, image: "Mesa quadrada avulsa.jpg", type: 1 },
+            { id: 2, name: "Jogo Mesa Redonda + 6 Cadeiras", price: 30.00, image: "mesa redonda + 6 cadeiras.jpg", type: 2 },
+            { id: 3, name: "Jogo Mesa Redonda + 8 Cadeiras", price: 35.00, image: "mesa redonda  + 8 cadeiras.jpg", type: 2 },
+            { id: 5, name: "Mesa Redonda Avulsa", price: 25.00, image: "mesa redonda avulsa.jpg", type: 2 },
+            { id: 6, name: "Cadeira Avulsa (182kg)", price: 3.00, image: "Cadeira avulsa.webp", type: 0 },
+            { id: 7, name: "Forro Quadrado (Tecido)", price: 7.00, image: "Forro de mesa quadrada.webp", type: 10 },
+            { id: 8, name: "Forro Redondo (Tecido)", price: 20.00, image: "Forro de mesa redonda.webp", type: 20 }
+        ];
+
+        const coverImages = {
+            "Lilás": { sq: "https://placehold.co/100x100/BA55D3/ffffff?text=Lilas+Quad", rd: "https://placehold.co/100x100/BA55D3/ffffff?text=Lilas+Red" },
+            "Preto": { sq: "https://placehold.co/100x100/000000/ffffff?text=Preto+Quad", rd: "https://placehold.co/100x100/000000/ffffff?text=Preto+Red" },
+            "Branco": { sq: "https://placehold.co/100x100/ffffff/000000?text=Branco+Quad", rd: "https://placehold.co/100x100/ffffff/000000?text=Branco+Red" },
+            "Rosa Bebê": { sq: "https://placehold.co/100x100/FFB6C1/000000?text=Rosa+Quad", rd: "https://placehold.co/100x100/FFB6C1/000000?text=Rosa+Red" },
+            "Vermelho": { sq: "https://placehold.co/100x100/FF0000/ffffff?text=Verm+Quad", rd: "https://placehold.co/100x100/FF0000/ffffff?text=Verm+Red" },
+            "Azul Bebê": { sq: "https://placehold.co/100x100/89CFF0/000000?text=Azul+B+Quad", rd: "https://placehold.co/100x100/89CFF0/000000?text=Azul+B+Red" },
+            "Azul Marinho": { sq: "https://placehold.co/100x100/000080/ffffff?text=Azul+M+Quad", rd: "https://placehold.co/100x100/000080/ffffff?text=Azul+M+Red" },
+            "Verde": { sq: "https://placehold.co/100x100/008000/ffffff?text=Verde+Quad", rd: "https://placehold.co/100x100/008000/ffffff?text=Verde+Red" },
+            "Amarelo Xadrez": { sq: "https://placehold.co/100x100/FFFF00/000000?text=Amarelo+X", rd: "https://placehold.co/100x100/FFFF00/000000?text=Amarelo+X" },
+            "Verde Xadrez": { sq: "https://placehold.co/100x100/008000/ffffff?text=Verde+X", rd: "https://placehold.co/100x100/008000/ffffff?text=Verde+X" },
+            "Preto Xadrez": { sq: "https://placehold.co/100x100/333333/ffffff?text=Preto+X", rd: "https://placehold.co/100x100/333333/ffffff?text=Preto+X" },
+            "Azul Xadrez": { sq: "https://placehold.co/100x100/0000FF/ffffff?text=Azul+X", rd: "https://placehold.co/100x100/0000FF/ffffff?text=Azul+X" },
+            "Vermelho Xadrez": { sq: "https://placehold.co/100x100/FF0000/ffffff?text=Verm+X", rd: "https://placehold.co/100x100/FF0000/ffffff?text=Verm+X" },
+            "Outra": { sq: "", rd: "" }
+        };
+
+        const PRICE_SQ_GAME_NORMAL = 18.00;
+        const PRICE_SQ_GAME_PROMO = 15.00; 
+        const PRICE_SQ_COVER_FULL = 7.00;
+        const PRICE_SQ_COVER_DISC = 5.00; 
+        const PRICE_RD_COVER_FULL = 20.00;
+        const PRICE_RD_COVER_DISC = 15.00;
+
+        const ORIGEM_STR = "Avenida Vereda dos Buritis, Goiânia, GO, 74370-881";
+        const phoneNumber = "5562991185058"; 
+        
+        let cart = {};
+        let currentFreight = 0;
+        let freightCalculated = false;
+        let calculatedDistance = "";
+        let globalDistKm = 0;
+        let activeDiscount = 0;
+        let activeCodeName = "";
+        let penaltyFee = 0;
+
+        // --- FUNÇÕES ---
+
+        function toggleCart() {
+            const cartBar = document.getElementById('cart-bar');
+            const icon = document.getElementById('toggle-icon');
+            cartBar.classList.toggle('minimized');
+            if (cartBar.classList.contains('minimized')) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+
+        function clearCart() {
+            if(!confirm("Deseja limpar todos os itens e recomeçar?")) return;
+            cart = {};
+            currentFreight = 0;
+            freightCalculated = false;
+            calculatedDistance = "";
+            globalDistKm = 0;
+            activeDiscount = 0;
+            activeCodeName = "";
+            penaltyFee = 0;
+            
+            document.getElementById('cep-input').value = "";
+            document.getElementById('freight-msg').innerHTML = "Digite o CEP acima ⬆";
+            document.getElementById('coupon-code').value = "";
+            document.getElementById('coupon-msg').innerText = "";
+            
+            const inputs = document.querySelectorAll('.qty-input');
+            inputs.forEach(i => i.value = 0);
+            updateTotals();
+        }
+
+        function updateCoverPreview(type) {
+            const selectId = type === 'sq' ? 'color-sq' : 'color-rd';
+            const imgId = type === 'sq' ? 'preview-img-sq' : 'preview-img-rd';
+            const colorName = document.getElementById(selectId).value;
+            const imgElement = document.getElementById(imgId);
+            
+            if (colorName && coverImages[colorName] && coverImages[colorName][type]) {
+                imgElement.src = coverImages[colorName][type];
+                imgElement.style.display = 'block';
+            } else {
+                imgElement.style.display = 'none';
+            }
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+            products.forEach(product => {
+                const qty = cart[product.id] || 0;
+                let priceDisplay = `R$ ${product.price.toFixed(2).replace('.', ',')}`;
+                let subText = "";
+
+                if(product.id === 1) {
+                    priceDisplay = `R$ 18,00 <span style="font-size:0.75rem">(un)</span>`;
+                    subText = `<div style="color:var(--accent-green); font-size:0.8rem; font-weight:700">ou R$ 15,00 acima de 5 un.</div>`;
+                }
+                if(product.type === 10) { 
+                    priceDisplay = `R$ 7,00 <span style="font-size:0.75rem">(Avulso)</span>`;
+                    subText = `<div style="color:var(--accent-green); font-size:0.8rem; font-weight:700">ou R$ 5,00 c/ Mesa Quad.</div>`;
+                }
+                if(product.type === 20) { 
+                    priceDisplay = `R$ 20,00 <span style="font-size:0.75rem">(Avulso)</span>`;
+                    subText = `<div style="color:var(--accent-green); font-size:0.8rem; font-weight:700">ou R$ 15,00 c/ Mesa Red.</div>`;
+                }
+
+                container.innerHTML += `
+                    <div class="product-card">
+                        <div class="product-img-box">
+                            <img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300?text=Foto'">
+                        </div>
+                        <div class="product-info">
+                            <div>
+                                <h3 class="product-title">${product.name}</h3>
+                                <span class="product-price">${priceDisplay}</span>
+                                ${subText}
+                            </div>
+                            <div class="qty-control">
+                                <button class="btn-qty" onclick="changeQty(${product.id}, -1)">-</button>
+                                <input type="tel" class="qty-input" id="input-${product.id}" value="${qty}" onchange="manualInput(${product.id}, this.value)">
+                                <button class="btn-qty" onclick="changeQty(${product.id}, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function changeQty(id, change) {
+            if (!cart[id]) cart[id] = 0;
+            cart[id] += change;
+            if (cart[id] < 0) cart[id] = 0;
+            document.getElementById(`input-${id}`).value = cart[id];
+            updateTotals();
+        }
+
+        function manualInput(id, value) {
+            let val = parseInt(value);
+            if (isNaN(val) || val < 0) val = 0;
+            cart[id] = val;
+            updateTotals();
+        }
+
+        function calcularFreteAPI() {
+            const cep = document.getElementById('cep-input').value;
+            const resultBox = document.getElementById('freight-msg');
+            if (cep.length < 8) { resultBox.innerHTML = "<span style='color:#f55'>CEP Inválido</span>"; return; }
+            resultBox.innerHTML = "Calculando...";
+            const service = new google.maps.DistanceMatrixService();
+            service.getDistanceMatrix(
+                { origins: [ORIGEM_STR], destinations: [`${cep}, Brasil`], travelMode: google.maps.TravelMode.DRIVING, unitSystem: google.maps.UnitSystem.METRIC },
+                function (response, status) {
+                    if (status !== "OK" || !response.rows[0].elements[0].distance) {
+                        resultBox.innerHTML = "<span style='color:#f55'>Erro CEP</span>"; freightCalculated = false; return;
+                    }
+                    const distText = response.rows[0].elements[0].distance.text;
+                    const distKm = response.rows[0].elements[0].distance.value / 1000;
+                    
+                    globalDistKm = distKm;
+
+                    let frete = 0;
+                    if (distKm <= 10) frete = distKm * 2.50;
+                    else if (distKm <= 20) frete = distKm * 3.50;
+                    else frete = distKm * 4.50;
+                    
+                    if (frete < 0) frete = 0; 
+                    
+                    currentFreight = frete;
+                    calculatedDistance = distText;
+                    freightCalculated = true;
+                    
+                    updateTotals(); // Chama updateTotals para atualizar o visual com a lógica da penalidade
+                }
+            );
+        }
+
+        function applyCoupon() {
+            const codeInput = document.getElementById('coupon-code').value.toUpperCase().trim();
+            const msgBox = document.getElementById('coupon-msg');
+            if (!codeInput) { msgBox.innerHTML = ""; return; }
+
+            if (COUPONS[codeInput]) {
+                const coupon = COUPONS[codeInput];
+                if (coupon.active) {
+                    activeDiscount = coupon.percent;
+                    activeCodeName = codeInput;
+                    msgBox.className = "coupon-msg text-success";
+                    msgBox.innerText = `Cupom ${codeInput} aplicado! Desconto de ${(coupon.percent * 100)}%`;
+                    updateTotals();
+                } else {
+                    activeDiscount = 0;
+                    activeCodeName = "";
+                    msgBox.className = "coupon-msg text-error";
+                    msgBox.innerText = "Este cupom foi desativado.";
+                    updateTotals();
+                }
+            } else {
+                activeDiscount = 0;
+                activeCodeName = "";
+                msgBox.className = "coupon-msg text-error";
+                msgBox.innerText = "Cupom inválido.";
+                updateTotals();
+            }
+        }
+
+        function calculateCartLogic() {
+            let total = 0;
+            let listHTML = "";
+            let sqTableCount = 0; let rdTableCount = 0;
+            
+            // Conta mesas
+            products.forEach(p => {
+                let q = cart[p.id] || 0;
+                if (p.type === 1) sqTableCount += q;
+                if (p.type === 2) rdTableCount += q;
+            });
+
+            // Calcula itens e gera lista
+            products.forEach(p => {
+                let qty = cart[p.id] || 0;
+                if (qty > 0) {
+                    let subtotalItem = 0;
+                    let desc = "";
+
+                    if (p.id === 1) { 
+                        let unitPrice = (qty >= 5) ? PRICE_SQ_GAME_PROMO : PRICE_SQ_GAME_NORMAL;
+                        subtotalItem = qty * unitPrice;
+                        desc = (qty >= 5) ? "(Promo 5+)" : "";
+                    }
+                    else if (p.id === 7) { 
+                        let discountQty = Math.min(qty, sqTableCount);
+                        let fullPriceQty = qty - discountQty;
+                        subtotalItem = (discountQty * PRICE_SQ_COVER_DISC) + (fullPriceQty * PRICE_SQ_COVER_FULL);
+                        sqTableCount -= discountQty;
+                        if(discountQty > 0) desc = `(${discountQty}c/ desc)`;
+                    } 
+                    else if (p.id === 8) { 
+                        let discountQty = Math.min(qty, rdTableCount);
+                        let fullPriceQty = qty - discountQty;
+                        subtotalItem = (discountQty * PRICE_RD_COVER_DISC) + (fullPriceQty * PRICE_RD_COVER_FULL);
+                        rdTableCount -= discountQty;
+                        if(discountQty > 0) desc = `(${discountQty}c/ desc)`;
+                    } else {
+                        subtotalItem = qty * p.price;
+                    }
+
+                    total += subtotalItem;
+                    listHTML += `
+                        <div class="cart-list-item">
+                            <span>${qty}x ${p.name} ${desc}</span>
+                            <span>R$ ${subtotalItem.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Exibir Cupom
+            if (activeDiscount > 0) {
+                let discountValue = total * activeDiscount;
+                listHTML += `
+                    <div class="cart-list-item discount-row">
+                        <span>Cupom ${activeCodeName}</span>
+                        <span>- R$ ${discountValue.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                `;
+            }
+
+            // OMITIR A PENALIDADE DA LISTA VISUAL (PEDIDO DO USUÁRIO)
+            // A taxa é somada no frete de forma oculta
+            if (globalDistKm > 15 && total < 100) {
+                penaltyFee = 30.00; 
+            } else {
+                penaltyFee = 0;
+            }
+
+            document.getElementById('cart-list-details').innerHTML = listHTML;
+            return total;
+        }
+
+        function updateTotals() {
+            let itemCounts = 0;
+            for(let q of Object.values(cart)) itemCounts += q;
+            
+            const productsSubtotal = calculateCartLogic(); 
+            
+            let discountAmount = 0;
+            if (activeDiscount > 0) {
+                discountAmount = productsSubtotal * activeDiscount;
+            }
+
+            // A MÁGICA DO FRETE OCULTO
+            let finalFreight = currentFreight;
+            if (penaltyFee > 0 && freightCalculated) {
+                finalFreight += penaltyFee;
+            }
+
+            const total = (productsSubtotal - discountAmount) + finalFreight;
+            
+            document.getElementById('final-total').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+            
+            // Atualiza o texto do frete para mostrar o valor inflacionado
+            if(freightCalculated) {
+                document.getElementById('freight-msg').innerHTML = `<span style='color:var(--accent-green)'>Entrega: R$ ${finalFreight.toFixed(2).replace('.', ',')}</span>`;
+            } else {
+                document.getElementById('freight-msg').innerHTML = "Digite o CEP acima ⬆";
+            }
+
+            const cartBar = document.getElementById('cart-bar');
+            if (itemCounts > 0) cartBar.style.display = 'flex';
+            else cartBar.style.display = 'none';
+        }
+
+        function openModal() {
+            let hasItems = false;
+            for (let q of Object.values(cart)) if (q > 0) hasItems = true;
+            if (!hasItems) return alert("Carrinho vazio.");
+            if (!freightCalculated) { document.getElementById('cep-input').focus(); return alert("Calcule o frete primeiro."); }
+            
+            const hasSqCover = (cart[7] > 0);
+            const hasRdCover = (cart[8] > 0);
+
+            document.getElementById('color-group-sq').style.display = hasSqCover ? 'block' : 'none';
+            document.getElementById('color-group-rd').style.display = hasRdCover ? 'block' : 'none';
+
+            document.getElementById('checkout-modal').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('checkout-modal').style.display = 'none'; }
+
+        function sendToWhatsApp() {
+            const date = document.getElementById('event-date').value;
+            const name = document.getElementById('client-name').value;
+            const address = document.getElementById('client-address').value;
+            const payment = document.getElementById('payment-method').value;
+            
+            if (!date || !name || !address) return alert("Preencha todos os campos.");
+            
+            let colorSq = "";
+            let colorRd = "";
+
+            if (cart[7] > 0) {
+                colorSq = document.getElementById('color-sq').value;
+                if(!colorSq) return alert("Selecione a cor dos forros QUADRADOS.");
+            }
+            if (cart[8] > 0) {
+                colorRd = document.getElementById('color-rd').value;
+                if(!colorRd) return alert("Selecione a cor dos forros REDONDOS.");
+            }
+
+            const dateFmt = new Date(date).toLocaleDateString('pt-BR', {timeZone:'UTC'});
+            let msg = `*NOVO PEDIDO - DT LOCAÇÕES*\n`;
+            msg += `📅 Data: *${dateFmt}*\n`;
+            msg += `👤 Cliente: *${name}*\n`;
+            msg += `📍 Local: *${address}*\n`;
+            msg += `💳 Pgto: *${payment}*\n`;
+            
+            if(colorSq) msg += `🎨 Cor Quad: *${colorSq}*\n`;
+            if(colorRd) msg += `🎨 Cor Red: *${colorRd}*\n`;
+            
+            msg += `--------------------------------\n`;
+            
+            let sqTableCount = 0; let rdTableCount = 0;
+            products.forEach(p => { 
+                if (p.type === 1) sqTableCount += (cart[p.id] || 0);
+                if (p.type === 2) rdTableCount += (cart[p.id] || 0);
+            });
+            let pTotal = 0;
+            products.forEach(p => {
+                let qty = cart[p.id] || 0;
+                if (qty > 0) {
+                    if (p.id === 1) { 
+                        let unitPrice = (qty >= 5) ? PRICE_SQ_GAME_PROMO : PRICE_SQ_GAME_NORMAL;
+                        let sub = qty * unitPrice; pTotal += sub;
+                        let label = (qty >= 5) ? "PROMO (5+)" : "Normal";
+                        msg += `▪️ ${qty}x ${p.name} [${label}] = R$ ${sub.toFixed(2)}\n`;
+                    }
+                    else if (p.id === 7) { 
+                        let discountQty = Math.min(qty, sqTableCount);
+                        let fullQty = qty - discountQty;
+                        sqTableCount -= discountQty;
+                        if (discountQty > 0) {
+                            let sub = discountQty * PRICE_SQ_COVER_DISC; pTotal += sub;
+                            msg += `▪️ ${discountQty}x Forro Quad. (Promocional) = R$ ${sub.toFixed(2)}\n`;
+                        }
+                        if (fullQty > 0) {
+                            let sub = fullQty * PRICE_SQ_COVER_FULL; pTotal += sub;
+                            msg += `▪️ ${fullQty}x Forro Quad. (Avulso) = R$ ${sub.toFixed(2)}\n`;
+                        }
+                    } 
+                    else if (p.id === 8) { 
+                        let discountQty = Math.min(qty, rdTableCount);
+                        let fullQty = qty - discountQty;
+                        rdTableCount -= discountQty;
+                        if (discountQty > 0) {
+                            let sub = discountQty * PRICE_RD_COVER_DISC; pTotal += sub;
+                            msg += `▪️ ${discountQty}x Forro Red. (Promocional) = R$ ${sub.toFixed(2)}\n`;
+                        }
+                        if (fullQty > 0) {
+                            let sub = fullQty * PRICE_RD_COVER_FULL; pTotal += sub;
+                            msg += `▪️ ${fullQty}x Forro Red. (Avulso) = R$ ${sub.toFixed(2)}\n`;
+                        }
+                    } else {
+                        let sub = qty * p.price; pTotal += sub;
+                        msg += `▪️ ${qty}x ${p.name}\n`;
+                    }
+                }
+            });
+
+            let discountAmount = 0;
+            if (activeDiscount > 0) {
+                discountAmount = pTotal * activeDiscount;
+            }
+            
+            // SOMA FINAL WHATSAPP (FRETE INFLADO)
+            let finalFreight = currentFreight;
+            if (penaltyFee > 0) {
+                finalFreight += penaltyFee;
+            }
+
+            const totalGeral = (pTotal - discountAmount) + finalFreight;
+            const cep = document.getElementById('cep-input').value;
+            
+            msg += `--------------------------------\n`;
+            msg += `📦 Itens: R$ ${pTotal.toFixed(2).replace('.', ',')}\n`;
+            
+            if (discountAmount > 0) {
+                msg += `🎟️ Cupom (${activeCodeName}): - R$ ${discountAmount.toFixed(2).replace('.', ',')}\n`;
+            }
+
+            // MOSTRA FRETE UNIFICADO
+            msg += `🚚 Frete: R$ ${finalFreight.toFixed(2).replace('.', ',')} (CEP ${cep})\n`;
+            msg += `✅ *TOTAL: R$ ${totalGeral.toFixed(2).replace('.', ',')}*\n`;
+            
+            const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+            closeModal();
+        }
+
+        // --- INICIALIZAÇÃO ---
+        window.addEventListener('load', function() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => input.value = '');
+            renderProducts(); 
+        });
+        
+        window.addEventListener('scroll', function() {
+            const scroll = window.pageYOffset;
+            const heroImg = document.getElementById('hero-img');
+            const heroHeight = document.querySelector('.hero').offsetHeight;
+            if (scroll <= heroHeight) {
+                heroImg.style.transform = 'translateY(' + (scroll * 0.4) + 'px)';
+                heroImg.style.opacity = 1 - (scroll / heroHeight);
+            }
+        });
+        
+        document.getElementById('event-date').min = new Date().toISOString().split("T")[0];
+    </script>
+</body>
+</html>
